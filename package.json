@@ -1,0 +1,19 @@
+{
+  "name": "beckend",
+  "version": "1.0.0",
+  "description": "Beckend application",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "NodeJS",
+    "ExpressJS"
+  ],
+  "author": "Alyorbek Esonaliyev",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "uuid": "^13.0.0"
+  }
+}
