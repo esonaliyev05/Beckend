@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev" : "nodemon app.js"
+    "dev": "nodemon app.js"
   },
   "keywords": [
     "NodeJS",
@@ -14,7 +14,9 @@
   "author": "Alyorbek Esonaliyev",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "mongoose": "^9.2.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
