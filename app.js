@@ -7,49 +7,16 @@ require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
 const postModel = require("./models/post.mosel")
+const { post } = require('./routers/post.router')
+
+
 
 const app = express()
 
 app.use(express.json())
 
-app.get("/", async (req, res) => {
-    try {
-        const allPost = await postModel.find()
-        res.status(200).json(allPost)
-    } catch (error) {
-        res.status(500).json(error)
-    }
+app.use('/api/post' , require("./routers/post.router"))
 
-})
-
-app.post("/", async (req, res) => {
-
-    try {
-        const { title, body } = req.body
-        const newPost = await postModel.create({ title, body })
-        res.status(201).json(newPost)
-        res.send(message)
-
-    } catch (error) {
-        res.status(500).json(error)
-    }
-
-})
-
-
-
-app.delete(`/:id`, (req, res) => {
-    const { id } = req.params
-    res.send(id)
-
-})
-
-app.put("/:id", (req, res) => {
-    const { id } = req.params
-    const body = req.body
-
-    res.json({ id, body })
-})
 
 
 
