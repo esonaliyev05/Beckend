@@ -17,8 +17,6 @@ class PostService {
 
      }
 
-
-
     async edit(post, id) {
     
     if(!id) {
@@ -35,9 +33,6 @@ class PostService {
       return updatedData
 
    }
-
-
-
 
    async getOne(id) {
     const post = await postModel.findById(id)
