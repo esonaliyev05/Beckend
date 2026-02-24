@@ -1,9 +1,12 @@
 const postMosel = require("../models/post.mosel");
+const fileService = require("./file.service");
 
 class PostService {
-    async create(post) {
-        const newPost = await postMosel.create(post)
+    async create(post , picture) {
+        const fileName = fileService.save(picture)
+        const newPost = await postMosel.create({...post , picture: fileName})
         return newPost
+        
     }
     async getAll() {
         const allPost = await postMosel.find()
@@ -18,8 +21,8 @@ class PostService {
      }
 
     async edit(post, id) {
-    
-    if(!id) {
+
+        if(!id) {
         throw new Error('Id not found')
     }
      
@@ -27,11 +30,9 @@ class PostService {
     if (!isPost) {
         throw new Error('Post with existing ID not found')
 
-        
     }
     const updatedData = await postModel.findByIdAndUpdate(id , post )
       return updatedData
-
    }
 
    async getOne(id) {
@@ -39,10 +40,8 @@ class PostService {
 
     return post 
 
-
    }
      
 }
-
 
 module.exports = new PostService()
