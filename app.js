@@ -5,13 +5,17 @@ const mongoose = require('mongoose')
 const postModel = require("./models/post.mosel")
 const { post } = require('./routers/post.router')
 const fileUpload = require('express-fileupload')
+const requestTime = require('./middlewares/request-time')
 
 
 const app = express()
 
+app.use(requestTime)
 app.use(express.json())
 app.use(express.static('static'))
 app.use(fileUpload({}))
+
+
 
 app.use('/api/post' , require("./routers/post.router"))
 
