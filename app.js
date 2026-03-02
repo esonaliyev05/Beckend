@@ -18,6 +18,8 @@ app.use(fileUpload({}))
 
 
 app.use('/api/post' , require("./routers/post.router"))
+app.use('/api/auth' , require('./routers/auth.route'))
+
 
 const PORT = process.env.PORT || 8080
 
