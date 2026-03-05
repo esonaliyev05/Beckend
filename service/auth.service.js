@@ -1,5 +1,6 @@
 const userModel = require('../models/user.model')
 const bcrypt = require('bcrypt')
+const tokenService = require('./token.service')
 
 class AuthService {
     async register(email , password) {
@@ -14,8 +15,12 @@ class AuthService {
         const user = await userModel.create({ email, password: hashPassword})
 
         const UserDto = new UserDto(user)
+        const tokens = tokenService.generateToken({ ...UserDto })
+        
+        await tokenService.saveToken(UserDto.id, tokens.refreshToken)
 
-        return { UserDto }
+
+        return { user:  UserDto , ...tokens }
     }
 
     async activation(userId) {
