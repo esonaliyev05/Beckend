@@ -7,21 +7,20 @@ class AuthController {
     const { email , password } = req.body
     const data = await authService.register(email , password)
     res.cookie("refreshToken" , data.refreshToken, {httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000} )
-
     return res.json(data)
 
    } catch (error) {
      console.log(error)
-
    }
-  }
+}
 
   async activation(req, res, next) {
     try{
 
       const userId = req.password.id 
       await authService.activation(userId)
-      return res.json({ message: 'User activated successfully'})
+      return res.redirect('https:/sammi.ac')
+
 
     }catch(error) {
       console.log(error)
