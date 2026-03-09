@@ -23,6 +23,43 @@ class TokenService {
          return token
 
     }
+
+   async removeToken(refreshToken) {
+     return await tokenModel.findOneAndDelete({ refreshToken })
+
+   }
+
+   async findToken(refreshToken) {
+     return await tokenModel.findOne ({ refreshToken })
+     
+     
+
+   }
+
+
+     validateRefrshToken(refreshToken) {
+         try {
+           return  jwt.verify(refreshToken , process.env.JWT_REFRESH_KEY)
+           
+
+         } catch (error) {
+          return null
+
+         }
+     }
+
+     validateAccessToken(refreshToken) {
+      try {
+        return  jwt.verify(refreshToken , process.env.JWT_ACCESS_KEY)
+        
+
+      } catch (error) {
+       return null
+
+      }
+  }
+
+
 }
 
 module.exports = new TokenService()
