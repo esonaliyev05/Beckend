@@ -2,40 +2,40 @@ require('dotenv').config()
 
 const express = require('express')
 const mongoose = require('mongoose')
-const postModel = require("./models/post.mosel")
-const { post } = require('./routers/post.router')
 const fileUpload = require('express-fileupload')
-const requestTime = require('./middlewares/request-time')
 const cookieParser = require('cookie-parser')
-
+const errorMiddleware = require('./middlewares/error.middleware')
+const cors = require('cors')
 
 const app = express()
 
-
-
-app.use(requestTime)
+app.use(
+	cors({
+		credentials: true,
+		origin: process.env.CLIENT_URL,
+	})
+)
 app.use(express.json())
 app.use(cookieParser({}))
 app.use(express.static('static'))
 app.use(fileUpload({}))
 
+// Routes
+app.use('/api/post', require('./routes/post.route'))
+app.use('/api/auth', require('./routes/auth.route'))
 
-app.use('/api/post' , require("./routers/post.router"))
-app.use('/api/auth' , require('./routers/auth.route'))
-
+app.use(errorMiddleware)
 
 const PORT = process.env.PORT || 8080
 
 const bootstrap = async () => {
-    try {
-        await mongoose.connect(process.env.DB_URL).then(() => console.log('Connected DB'))
-        app.listen(PORT, () => console.log(`Listening on - http://localhost:${PORT}`))
+	try {
+		await mongoose.connect(process.env.DB_URL).then(() => console.log('Connected DB'))
 
-    } catch (error) {
-        console.log(`Error connecting with DB: ${error}`)
-
-    }
-
+		app.listen(PORT, () => console.log(`Listening on - http://localhost:${PORT}`))
+	} catch (error) {
+		console.log(`Error connecting with DB: ${error}`)
+	}
 }
 
 bootstrap()
