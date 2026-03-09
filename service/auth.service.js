@@ -1,124 +1,128 @@
-const UserDto = require('../dtos/user.dto')
-const userModel = require('../models/user.model')
-const bcrypt = require('bcrypt')
-const tokenService = require('./token.service')
-const mailService = require('./mail.service')
-const BaseError = require('../errors/base.error')
+const UserDto = require("../dtos/user.dto");
+const userModel = require("../models/user.model");
+const bcrypt = require("bcrypt");
+const tokenService = require("./token.service");
+const mailService = require("./mail.service");
+const BaseError = require("../errors/base.error");
 
 class AuthService {
-	async register(email, password) {
-		const existUser = await userModel.findOne({ email })
+  async register(email, password) {
+    const existUser = await userModel.findOne({ email });
 
-		if (existUser) {
-			throw BaseError.BadRequest(`User with existing email ${email} already registered`)
-		}
+    if (existUser) {
+      throw BaseError.BadRequest(
+        `User with existing email ${email} already registered`
+      );
+    }
 
-		const hashPassword = await bcrypt.hash(password, 10)
-		const user = await userModel.create({ email, password: hashPassword })
-		const userDto = new UserDto(user)
+    const hashPassword = await bcrypt.hash(password, 10);
+    const user = await userModel.create({ email, password: hashPassword });
+    const userDto = new UserDto(user);
+    await mailService.sendActivationMail(
+      email,
+      `${process.env.API_URL}/api/auth/activation/${userDto.id}`
+    );
+    const tokens = tokenService.generateToken({ ...userDto });
+    await tokenService.saveToken(userDto.id, tokens.refreshToken);
+    return { user: userDto, ...tokens };
+  }
 
-		await mailService.sendActivationMail(email, `${process.env.API_URL}/api/auth/activation/${userDto.id}`)
+  async activation(userId) {
+    const user = await userModel.findById(userId);
 
-		const tokens = tokenService.generateToken({ ...userDto })
+    if (!user) {
+      throw BaseError.BadRequest("User is not defined");
+    }
 
-		await tokenService.saveToken(userDto.id, tokens.refreshToken)
+    user.isActivated = true;
+    await user.save();
+  }
 
-		return { user: userDto, ...tokens }
-	}
+  async login(email, password) {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      throw BaseError.BadRequest("User is not defined");
+    }
 
-	async activation(userId) {
-		const user = await userModel.findById(userId)
+    const isPassword = await bcrypt.compare(password, user.password);
+    if (!isPassword) {
+      throw BaseError.BadRequest("Password is incorrect");
+    }
 
-		if (!user) {
-			throw BaseError.BadRequest('User is not defined')
-		}
+    const userDto = new UserDto(user);
 
-		user.isActivated = true
-		await user.save()
-	}
+    const tokens = tokenService.generateToken({ ...userDto });
 
-	async login(email, password) {
-		const user = await userModel.findOne({ email })
-		if (!user) {
-			throw BaseError.BadRequest('User is not defined')
-		}
+    await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-		const isPassword = await bcrypt.compare(password, user.password)
-		if (!isPassword) {
-			throw BaseError.BadRequest('Password is incorrect')
-		}
+    return { user: userDto, ...tokens };
+  }
 
-		const userDto = new UserDto(user)
+  async logout(refreshToken) {
+    return await tokenService.removeToken(refreshToken);
+  }
 
-		const tokens = tokenService.generateToken({ ...userDto })
+  async refresh(refreshToken) {
+    if (!refreshToken) {
+      throw BaseError.UnauthorizedError("Bad authorization");
+    }
 
-		await tokenService.saveToken(userDto.id, tokens.refreshToken)
+    const userPayload = tokenService.validateRefreshToken(refreshToken);
+    const tokenDb = await tokenService.findToken(refreshToken);
+    if (!userPayload || !tokenDb) {
+      throw BaseError.UnauthorizedError("Bad authorization");
+    }
 
-		return { user: userDto, ...tokens }
-	}
+    const user = await userModel.findById(userPayload.id);
+    const userDto = new UserDto(user);
 
-	async logout(refreshToken) {
-		return await tokenService.removeToken(refreshToken)
-	}
+    const tokens = tokenService.generateToken({ ...userDto });
 
-	async refresh(refreshToken) {
-		if (!refreshToken) {
-			throw BaseError.UnauthorizedError('Bad authorization')
-		}
+    await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-		const userPayload = tokenService.validateRefreshToken(refreshToken)
-		const tokenDb = await tokenService.findToken(refreshToken)
-		if (!userPayload || !tokenDb) {
-			throw BaseError.UnauthorizedError('Bad authorization')
-		}
+    return { user: userDto, ...tokens };
+  }
 
-		const user = await userModel.findById(userPayload.id)
-		const userDto = new UserDto(user)
+  async getUsers() {
+    return await userModel.find();
+  }
 
-		const tokens = tokenService.generateToken({ ...userDto })
+  async forgotPassword(email) {
+    if (!email) {
+      throw BaseError.BadRequest("Email is required");
+    }
 
-		await tokenService.saveToken(userDto.id, tokens.refreshToken)
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      throw BaseError.BadRequest("User with existing email is not found");
+    }
 
-		return { user: userDto, ...tokens }
-	}
+    const userDto = new UserDto(user);
 
-	async getUsers() {
-		return await userModel.find()
-	}
+    const tokens = tokenService.generateToken({ ...userDto });
 
-	async forgotPassword(email) {
-		if (!email) {
-			throw BaseError.BadRequest('Email is required')
-		}
+    await mailService.sendForgotPasswordMail(
+      email,
+      `${process.env.CLIENT_URL}/recovery-account/${tokens.accessToken}`
+    );
 
-		const user = await userModel.findOne({ email })
-		if (!user) {
-			throw BaseError.BadRequest('User with existing email is not found')
-		}
+    return 200;
+  }
 
-		const userDto = new UserDto(user)
+  async recoveryAccount(token, password) {
+    if (!token) {
+      throw BaseError.BadRequest("Something went wrong with token");
+    }
 
-		const tokens = tokenService.generateToken({ ...userDto })
+    const userData = tokenService.validateAccessToken(token);
+    if (!userData) {
+      throw BaseError.BadRequest("Expired access to your account");
+    }
 
-		await mailService.sendForgotPasswordMail(email, `${process.env.CLIENT_URL}/recovery-account/${tokens.accessToken}`)
-
-		return 200
-	}
-
-	async recoveryAccount(token, password) {
-		if (!token) {
-			throw BaseError.BadRequest('Something went wrong with token')
-		}
-
-		const userData = tokenService.validateAccessToken(token)
-		if (!userData) {
-			throw BaseError.BadRequest('Expired access to your account')
-		}
-
-		const hashPassword = await bcrypt.hash(password, 10)
-		await userModel.findByIdAndUpdate(userData.id, { password: hashPassword })
-		return 200
-	}
+    const hashPassword = await bcrypt.hash(password, 10);
+    await userModel.findByIdAndUpdate(userData.id, { password: hashPassword });
+    return 200;
+  }
 }
 
-module.exports = new AuthService()
+module.exports = new AuthService();
