@@ -11,8 +11,13 @@ module.exports = class BaseError extends Error {
 	static UnauthorizedError() {
 		return new BaseError(401, 'User is not authorized')
 	}
+	
 
 	static BadRequest(message, errors = []) {
 		return new BaseError(400, message, errors)
+	}
+
+	static AuthRequest(massage, errors = []) {
+		return new BaseError(400, massage, errors)
 	}
 }
