@@ -50,11 +50,8 @@ class AuthService {
     }
 
     const userDto = new UserDto(user);
-
     const tokens = tokenService.generateToken({ ...userDto });
-
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
-
     return { user: userDto, ...tokens };
   }
 
@@ -75,11 +72,8 @@ class AuthService {
 
     const user = await userModel.findById(userPayload.id);
     const userDto = new UserDto(user);
-
     const tokens = tokenService.generateToken({ ...userDto });
-
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
-
     return { user: userDto, ...tokens };
   }
 

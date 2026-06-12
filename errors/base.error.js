@@ -21,3 +21,5 @@ module.exports = class BaseError extends Error {
 		return new BaseError(400, massage, errors)
 	}
 }
+
+

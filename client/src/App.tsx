@@ -19,7 +19,6 @@ function App() {
 			setIsAuth(true)
 			setUser(data.user)
 		} catch (error) {
-			// @ts-ignore
 			toast(error.response?.data?.message)
 			localStorage.removeItem('accessToken')
 		} finally {
